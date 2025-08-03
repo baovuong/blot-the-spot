@@ -15,10 +15,12 @@ packaging==25.0
 Pygments==2.19.2
 pyparsing==3.2.3
 PyYAML==6.0.2
+redis==6.2.0
 requests==2.32.4
 rich==14.1.0
 soupsieve==2.7
 spotifyscraper==2.1.5
+spotipy==2.25.1
 tqdm==4.67.1
 typing_extensions==4.14.1
 urllib3==2.5.0
