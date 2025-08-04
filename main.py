@@ -1,3 +1,4 @@
+import json
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 import tomllib
@@ -10,11 +11,22 @@ def authenticate(username, password):
 def get_playlist_data(playlist_id):
     pass
 
+def get_all_saved_tracks(sp: spotipy.Spotify, limit=50):
+    tracks = []
+    offset = 0
+
+    current = sp.current_user_saved_tracks(limit, offset)['items']
+    while current:
+        tracks.extend(current)
+        offset += limit
+        current = sp.current_user_saved_tracks(limit, offset)['items']
+
+    return tracks
 def main():
     with open("app.toml", mode="rb") as fp:
         config = tomllib.load(fp)
 
-    scope = "user-library-read"
+    scope = 'playlist-read-private,user-library-read'
 
     sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
         client_id=config['spotify_app']['client_id'],
@@ -22,10 +34,12 @@ def main():
         redirect_uri=config['spotify_app']['redirect_uri'],
         scope=scope))
 
-    results = sp.current_user_saved_tracks()
-    for idx, item in enumerate(results['items']):
-        track = item['track']
-        print(idx, track['artists'][0]['name'], " – ", track['name'])
+    saved_tracks = get_all_saved_tracks(sp)
+    print(len(saved_tracks))
+
+
+    with open('saved_tracks.json', 'w') as f:
+        json.dump(saved_tracks, f)
 
 
 if __name__ == '__main__':
