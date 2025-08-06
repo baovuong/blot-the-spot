@@ -176,7 +176,8 @@ pyrightconfig.json
 
 # End of https://www.toptal.com/developers/gitignore/api/python
 
-.kdev4/blot-the-spot.kdev4 
+.kdev4/blot-the-spot.kdev4
+*.kdev4
 app.toml
 .env.toml
 
