@@ -1,6 +1,6 @@
 import json
-import logging 
-import os 
+import logging
+import os
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 import tomllib
@@ -9,6 +9,9 @@ scope = 'playlist-read-private,user-library-read'
 
 with open(".env.toml", mode="rb") as fp:
     config = tomllib.load(fp)
+
+if not os.path.isdir(config['log']['path']):
+    os.makedirs(config['log']['path'])
 
 logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
 rootLogger = logging.getLogger()
@@ -36,12 +39,12 @@ def get_all_saved_tracks(sp: spotipy.Spotify, limit=50):
     tracks = []
     offset = 0
 
-    rootLogger.debug('grabbing tracks: limit={0} offset={1}', limit, offset)
+    rootLogger.info('grabbing tracks: limit={0} offset={1}', limit, offset)
     current = sp.current_user_saved_tracks(limit, offset)['items']
     while current:
         tracks.extend(current)
         offset += limit
-        rootLogger.debug('grabbing tracks: limit={0} offset={1}', limit, offset)
+        rootLogger.info('grabbing tracks: limit={0} offset={1}', limit, offset)
         current = sp.current_user_saved_tracks(limit, offset)['items']
 
     return tracks
@@ -56,7 +59,6 @@ def main():
     # setting up files
     if not os.path.isdir('output'):
         os.makedirs('output')
-    
 
     rootLogger.info('Getting all saved tracks')
     saved_tracks = get_all_saved_tracks(sp)
