@@ -5,6 +5,8 @@ import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 import tomllib
 
+from models import * 
+
 scope = 'playlist-read-private,user-library-read'
 
 with open(".env.toml", mode="rb") as fp:
@@ -31,23 +33,26 @@ rootLogger.addHandler(consoleHandler)
 def authenticate(username, password):
     pass
 
+def get_playlists(sp: spotipy.Spotify):
+    pass 
+
 # grab all playlist data
-def get_playlist_data(playlist_id):
+def get_playlist_data(sp: spotipy.Spotify, playlist_id):
     pass
 
+# grab all saved tracks
 def get_all_saved_tracks(sp: spotipy.Spotify, limit=50):
-    tracks = []
     offset = 0
 
     rootLogger.info('grabbing tracks: limit={0} offset={1}', limit, offset)
     current = sp.current_user_saved_tracks(limit, offset)['items']
     while current:
-        tracks.extend(current)
+        for track in current:
+            yield Track(track['track']['id'], track['track']['name'], artists=[Artist(artist['id'], artist['name']) for artist in track['track']['artists']])
         offset += limit
         rootLogger.info('grabbing tracks: limit={0} offset={1}', limit, offset)
         current = sp.current_user_saved_tracks(limit, offset)['items']
 
-    return tracks
 def main():
     rootLogger.info('starting Spotify Extraction')
     sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
@@ -61,7 +66,7 @@ def main():
         os.makedirs('output')
 
     rootLogger.info('Getting all saved tracks')
-    saved_tracks = get_all_saved_tracks(sp)
+    saved_tracks = [track for track in get_all_saved_tracks(sp)]
 
     rootLogger.info('saving tracks to file')
     with open('output/saved_tracks.json', 'w') as f:

@@ -1,9 +1,9 @@
 class Track:
 
-    def __init__(self, id='', name='', artist=None, album=None):
+    def __init__(self, id='', name='', artists=[], album=None):
         self.id = id
         self.name = name
-        self.artist = artist 
+        self.artists = artists
         self.album = album
 
 class Artist:
