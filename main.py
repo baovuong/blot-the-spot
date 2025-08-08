@@ -48,7 +48,9 @@ def get_all_saved_tracks(sp: spotipy.Spotify, limit=50):
     current = sp.current_user_saved_tracks(limit, offset)['items']
     while current:
         for track in current:
-            yield Track(track['track']['id'], track['track']['name'], artists=[Artist(artist['id'], artist['name']) for artist in track['track']['artists']])
+            artists = [Artist(artist['id'], artist['name']) for artist in track['track']['artists']]
+            album = Album(id=track['track']['album']['id'], name=track['track']['album']['name'], release_date=track['track']['album']['release_date'])
+            yield Track(track['track']['id'], track['track']['name'], artists=artists, album=album)
         offset += limit
         rootLogger.info('grabbing tracks: limit={0} offset={1}', limit, offset)
         current = sp.current_user_saved_tracks(limit, offset)['items']
@@ -70,7 +72,7 @@ def main():
 
     rootLogger.info('saving tracks to file')
     with open('output/saved_tracks.json', 'w') as f:
-        json.dump(saved_tracks, f, indent=4)
+        json.dump(saved_tracks, f, indent=4, default=vars)
 
     rootLogger.info('Spotify Extraction complete')
 

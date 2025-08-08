@@ -13,11 +13,11 @@ class Artist:
 
 class Album:
     
-    def __init__(self, id='', name='', tracks=[], year=0):
+    def __init__(self, id='', name='', tracks=[], release_date=''):
         self.id = id
         self.name = name 
         self.tracks = tracks
-        self.year = year 
+        self.release_date = release_date 
 
 class Playlist:
     
