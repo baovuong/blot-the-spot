@@ -5,11 +5,11 @@ import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 import tomllib
 
-from models import * 
+from models import *
 
 scope = 'playlist-read-private,user-library-read'
 
-with open(".env.toml", mode="rb") as fp:
+with open('.env.toml', mode='rb') as fp:
     config = tomllib.load(fp)
 
 if not os.path.isdir(config['log']['path']):
@@ -33,12 +33,24 @@ rootLogger.addHandler(consoleHandler)
 def authenticate(username, password):
     pass
 
-def get_playlists(sp: spotipy.Spotify):
-    pass 
+def get_playlists(sp: spotipy.Spotify, limit=50):
+    offset = 0
+    
+    rootLogger.info('grabbing playlists: offset=',offset)
+    current = sp.current_user_playlists(limit)['items']
+    while current:
+        for track in current:
+            yield track 
+        
+        offset += limit 
+        rootLogger.info('grabbing playlists: offset=',offset)
+        current = sp.current_user_playlists(limit, offset)['items']
 
-# grab all playlist data
-def get_playlist_data(sp: spotipy.Spotify, playlist_id):
-    pass
+# grab all playlist tracks
+def get_playlist_tracks(sp: spotipy.Spotify, playlist_id: str):
+    rootLogger.info('grabbing playlist tracks for', playlist_id)
+    response = sp.playlist_tracks(playlist_id)
+    return response['items']
 
 # grab all saved tracks
 def get_all_saved_tracks(sp: spotipy.Spotify, limit=50):
@@ -47,10 +59,11 @@ def get_all_saved_tracks(sp: spotipy.Spotify, limit=50):
     rootLogger.info('grabbing tracks: limit={0} offset={1}', limit, offset)
     current = sp.current_user_saved_tracks(limit, offset)['items']
     while current:
-        for track in current:
-            artists = [Artist(artist['id'], artist['name']) for artist in track['track']['artists']]
-            album = Album(id=track['track']['album']['id'], name=track['track']['album']['name'], release_date=track['track']['album']['release_date'])
-            yield Track(track['track']['id'], track['track']['name'], artists=artists, album=album)
+        tracks = [c['track'] for c in current]
+        for track in tracks:
+            artists = [Artist(artist['id'], artist['name']) for artist in track['artists']]
+            album = Album(id=track['album']['id'], name=track['album']['name'], release_date=track['album']['release_date'])
+            yield Track(track['id'], track['name'], artists=artists, album=album)
         offset += limit
         rootLogger.info('grabbing tracks: limit={0} offset={1}', limit, offset)
         current = sp.current_user_saved_tracks(limit, offset)['items']
@@ -73,6 +86,11 @@ def main():
     rootLogger.info('saving tracks to file')
     with open('output/saved_tracks.json', 'w') as f:
         json.dump(saved_tracks, f, indent=4, default=vars)
+    
+    playlists = [Playlist(id=p['id'], name=p['name'], tracks=get_playlist_tracks(sp, p['id'])) for p in get_playlists(sp)]
+
+    with open('output/playlists.json', 'w') as f:
+        json.dump(playlists, f, indent=4, default=vars)
 
     rootLogger.info('Spotify Extraction complete')
 
